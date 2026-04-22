@@ -58,7 +58,7 @@ public class BillService {
             item.setQuantity(finalQty);
 
             // SAFE PRICE HANDLING
-            item.setPrice(med.getPrice() != 0.0 ? med.getPrice() : 0.0);
+           item.setPrice(med.getPrice());
 
             item.setBill(bill);
 
