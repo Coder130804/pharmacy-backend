@@ -1,6 +1,7 @@
 package com.pharmacy.pharmacy_billing.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,10 +18,9 @@ public class Bill {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "bill", cascade = CascadeType.ALL)
     private List<BillItem> items;
-
-    // getters & setters
 
     public Long getId() {
         return id;

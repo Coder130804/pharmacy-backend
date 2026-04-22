@@ -1,7 +1,7 @@
 package com.pharmacy.pharmacy_billing.entity;
 
-
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 @Table(name = "bill_item")
@@ -15,6 +15,7 @@ public class BillItem {
 
     private Double price;
 
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "bill_id")
     private Bill bill;
@@ -22,8 +23,6 @@ public class BillItem {
     @ManyToOne
     @JoinColumn(name = "medicine_id")
     private Medicine medicine;
-
-    // getters & setters
 
     public Long getId() {
         return id;

@@ -10,10 +10,7 @@ import com.pharmacy.pharmacy_billing.repository.MedicineRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class BillService {
@@ -35,36 +32,34 @@ public class BillService {
         for (BillRequest.Item reqItem : request.getItems()) {
 
             Medicine med = medicineRepository.findById(reqItem.getMedicineId())
-                    .orElseThrow(() -> new RuntimeException("Medicine not found"));
+                    .orElseThrow(() -> new RuntimeException(
+                            "Medicine not found: " + reqItem.getMedicineId()
+                    ));
 
             int requestedQty = reqItem.getQuantity();
             int availableQty = med.getQuantity();
 
-            int finalQty;
+            int finalQty = requestedQty;
 
-            // ✅ SAFE STOCK LOGIC
             if (requestedQty > availableQty) {
                 finalQty = availableQty;
 
                 warnings.add(
-                        med.getName() +
-                        " only " + availableQty +
-                        " available. Quantity adjusted."
+                        med.getName() + " only " + availableQty + " available. Adjusted."
                 );
-            } else {
-                finalQty = requestedQty;
             }
 
-            // ✅ Update stock safely (NEVER negative)
-            int updatedStock = availableQty - finalQty;
-            med.setQuantity(Math.max(updatedStock, 0));
-
+            // safe stock update
+            med.setQuantity(Math.max(availableQty - finalQty, 0));
             medicineRepository.save(med);
 
             BillItem item = new BillItem();
             item.setMedicine(med);
             item.setQuantity(finalQty);
-            item.setPrice(med.getPrice());
+
+            // SAFE PRICE HANDLING
+            item.setPrice(med.getPrice() != 0.0 ? med.getPrice() : 0.0);
+
             item.setBill(bill);
 
             items.add(item);
@@ -74,8 +69,10 @@ public class BillService {
 
         Bill savedBill = billRepository.save(bill);
 
+        // ❌ IMPORTANT: DO NOT RETURN FULL ENTITY (prevents 500 JSON recursion)
         Map<String, Object> response = new HashMap<>();
-        response.put("bill", savedBill);
+        response.put("billId", savedBill.getId());
+        response.put("total", savedBill.getTotal());
         response.put("warnings", warnings);
 
         return response;
